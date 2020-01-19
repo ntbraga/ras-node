@@ -1,0 +1,262 @@
+documentation:
+  version: v1
+  title: R.A.S - Intelligent Relationship Assistant
+  description: Api R.A.S
+  contact:
+    name: Pedro Neto Sousa Braga
+    email: ntbraga@live.com
+  licence:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  tags:
+    - name: Auth
+      description: Authentication
+    - name: Crud
+      description: Crud Services
+  authorizers:
+    - name: AuthService
+      description: Authentication Service
+  models:
+    - name: UserData
+      description: User's data
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          email:
+            type: string
+            description: User's email
+          name:
+            type: string
+            description: User's name
+          createdAt:
+            type: string
+            description: Users's registration date
+          updatedAt:
+            type: string
+            description: User's update date
+    - name: LoginRequest
+      description: Login data to authenticate user
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          email:
+            type: string
+            description: User's email
+          password:
+            type: string
+            description: User's password
+        required:
+          - email
+          - password
+    - name: LoginSuccess
+      description: User logged successfully
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          _id: 
+            type: string
+            description: User's id
+          email:
+            type: string
+            description: User's email
+          name:
+            type: string
+            description: User's name
+          createdAt:
+            type: string
+            description: Users's registration date
+          updatedAt:
+            type: string
+            description: User's update date
+          expiration:
+            type: string
+            description: User's token expiration date
+          token:
+            type: string
+            description: User's access token
+    - name: LoginError
+      description: Login error
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          message:
+              type: string
+              description: Error message
+              example: Usuário e/ou senha incorretos
+    - name: AuthTokenRequest
+      description: Request to create Auth Token
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          password:
+            type: string
+            description: User's password to secure request
+          description:
+            type: string
+            description: Description to indentify Auth Token
+        required:
+          - password
+          - description
+    - name: AuthTokenResponse
+      description: Response when Auth Token is successfully created
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          token:
+            type: string
+            description: Token used for authorization
+          scopes:
+            type: array
+            items:
+              type: string
+            description: Scopes assossiated with this Token
+          description:
+            type: string
+            description: Token description
+          user:
+            type: string
+            description: User's id
+    - name: CreateUserRequest
+      description: Data from which the user will be created
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          email:
+            type: string
+            description: User's email
+          name:
+            type: string
+            description: User's name
+          password:
+            type: string
+            description: User's password
+        required:
+          - email
+          - name
+          - password
+    - name: IncorrectData
+      description: Missing/Incorrect data from parameters
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+      properties:
+        message:
+          type: string
+          description: Readable message from the error
+        key:
+          type: string
+          description: First key from which the error has occurred
+        cause:
+          type: string
+          description: Short key describing the error
+    - name: AuthTokenList
+      description: List of auth tokens
+      contentType: application/json
+      schema:
+        $schema: http://json-schema.org/draft-04/schema#
+        properties:
+          list:
+            type: array
+            items:
+              type: object
+            properties:
+              token:
+                type: string
+                description: Encripted auth token (not usable)
+              scopes:
+                type: array
+                items:
+                  type: string
+                description: Scopes assossiated with this Token
+              description:
+                type: string
+                description: Token description
+              user:
+                type: string
+                description: User's id
+              
+endpoints:
+  auth_login: 
+    summary: Login service
+    description: Retrieves a token assossiated with the user's email and password
+    tags:
+      - Auth
+    requestBody:
+      description: Login data to authenticate user
+    requestModels:
+      application/json: LoginRequest
+    methodResponses:
+      - statusCode: 200
+        responseBody:
+          description: User logged successfully
+        responseModels:
+          application/json: LoginSuccess
+      - statusCode: 401
+        responseBody:
+          description: Unauthorized login
+        responseModels:
+          application/json: LoginError
+  auth_token:
+    summary: Create auth token
+    description: Creates a auth token to authenticate api integration
+    tags:
+      - Auth
+    requestBody:
+      description: Data to ensure that user is creating token
+    requestModels:
+      application/json: AuthTokenRequest
+    methodResponses:
+      - statusCode: 200
+        responseBody:
+          description: Token information
+        responseModels:
+          application/json: AuthTokenResponse
+      - statusCode: 401
+        responseBody:
+          description: Unauthorized
+        responseModels:
+          application/json: LoginError
+  create_user:
+    summary: Create a new user
+    description: Creates an user
+    tags:
+      - Auth
+      - Crud
+    requestBody:
+      description: Data of the user to be created
+    requestModels:
+      application/json: CreateUserRequest
+    methodResponses:
+      - statusCode: 200
+        responseBody:
+          description: Data from the created user
+        responseModels:
+          application/json: UserData
+      - statusCode: 400
+        responseBody:
+          description: Missing/Incorrect data from body
+        responseModels:
+          application/json: IncorrectData
+      - statusCode: 401
+        responseBody:
+          description: Unauthorized
+        responseModels:
+          application/json: LoginError
+  auth_list:
+    summary: Lists users auth tokens
+    description: Retrieves a list of auth tokens created by the user
+    tags:
+      - Auth
+    methodResponses:
+      - statusCode: 200
+        responseBody:
+          description: A list of auth tokens
+        responseModels:
+          application/json: AuthTokenList

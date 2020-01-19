@@ -1,0 +1,119 @@
+service:
+  name: atmus-ras-node
+
+custom:
+  webpack:
+    webpackConfig: ./webpack.config.js
+    includeModules: true
+  documentation: ${file(./serverless.doc.yml):documentation}
+  ras:
+    bucketName: ras-model-bot
+
+plugins:
+  - serverless-webpack
+  - serverless-offline
+  - serverless-openapi-documentation
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  stage: dev
+  region: us-east-1
+  stackName: atmus-ras-stack
+  apiName: node-atmus-ras-api
+  deploymentBucket:
+    name: ${self:provider.apiName}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - lambda:InvokeFunction
+        - lambda:InvokeAsync
+      Resource: "*"
+  apiGateway:
+    minimumCompressionSize: 1024
+  environment:
+    AWS_NODEJS_CONNECTION_REUSE_ENABLED: 1
+    DB: mongodb+srv://atmus:11165535@cluster0-dcxj4.mongodb.net/test?retryWrites=true&w=majority
+    SALT: A2TM0U20
+
+functions:
+  authorizer:
+    handler: handlers/auth.authorizer
+  auth_login:
+    handler: handlers/auth.login
+    events:
+      - http:
+          method: post
+          path: auth/login
+          cors: true
+          documentation: ${file(serverless.doc.yml):endpoints.auth_login}
+  create_user:
+    handler: handlers/data.createUser
+    events:
+      - http:
+          method: post
+          path: auth/create
+          cors: true
+          documentation: ${file(serverless.doc.yml):endpoints.create_user}
+  auth_token:
+    handler: handlers/auth.createAuthToken
+    events:
+      - http:
+          method: post
+          path: auth/token
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true
+          documentation: ${file(serverless.doc.yml):endpoints.auth_token}
+  auth_list:
+    handler: handlers/auth.listAuthToken
+    events:
+      - http:
+          method: get
+          path: auth/list
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true
+          documentation: ${file(serverless.doc.yml):endpoints.auth_list}
+  data:
+    handler: handlers/data.query
+    events:
+      - http:
+          method: get
+          path: data/{entity}
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true
+  upsert:
+    handler: handlers/data.upsert
+    events:
+      - http:
+          method: post
+          path: data/{entity}
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true
+  train:
+    handler: handlers/bot.train
+    events:
+      - http:
+          method: post
+          path: bot/train
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true
+  intent:
+    handler: handlers/bot.intent
+    events:
+      - http:
+          method: post
+          path: bot/intent
+          authorizer:
+            name: authorizer
+            type: request
+          cors: true

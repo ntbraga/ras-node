@@ -1,0 +1,208 @@
+openapi: 3.0.0
+components:
+  schemas:
+    UserData:
+      properties:
+        email:
+          type: string
+          description: User's email
+        name:
+          type: string
+          description: User's name
+        createdAt:
+          type: string
+          description: Users's registration date
+        updatedAt:
+          type: string
+          description: User's update date
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          description: User's email
+        password:
+          type: string
+          description: User's password
+      required:
+        - email
+        - password
+    LoginSuccess:
+      properties:
+        _id:
+          type: string
+          description: User's id
+        email:
+          type: string
+          description: User's email
+        name:
+          type: string
+          description: User's name
+        createdAt:
+          type: string
+          description: Users's registration date
+        updatedAt:
+          type: string
+          description: User's update date
+        expiration:
+          type: string
+          description: User's token expiration date
+        token:
+          type: string
+          description: User's access token
+    LoginError:
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: Usuário e/ou senha incorretos
+    AuthTokenRequest:
+      properties:
+        password:
+          type: string
+          description: User's password to secure request
+        description:
+          type: string
+          description: Description to indentify Auth Token
+      required:
+        - password
+        - description
+    AuthTokenResponse:
+      properties:
+        token:
+          type: string
+          description: Token used for authorization
+        scopes:
+          type: array
+          items:
+            type: string
+          description: Scopes assossiated with this Token
+        description:
+          type: string
+          description: Token description
+        user:
+          type: string
+          description: User's id
+    CreateUserRequest:
+      properties:
+        email:
+          type: string
+          description: User's email
+        name:
+          type: string
+          description: User's name
+        password:
+          type: string
+          description: User's password
+      required:
+        - email
+        - name
+        - password
+    IncorrectData: {}
+    AuthTokenList:
+      properties:
+        list:
+          type: array
+          items:
+            type: object
+          properties:
+            token:
+              type: string
+              description: Encripted auth token (not usable)
+            scopes:
+              type: array
+              items:
+                type: string
+              description: Scopes assossiated with this Token
+            description:
+              type: string
+              description: Token description
+            user:
+              type: string
+              description: User's id
+  securitySchemes: {}
+info:
+  title: R.A.S - Intelligent Relationship Assistant
+  description: Api R.A.S
+  version: v1
+paths:
+  /auth/login:
+    post:
+      operationId: auth_login
+      summary: Login service
+      description: Retrieves a token assossiated with the user's email and password
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: User logged successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginSuccess'
+        '401':
+          description: Unauthorized login
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginError'
+  /auth/create:
+    post:
+      operationId: create_user
+      summary: Create a new user
+      description: Creates an user
+      tags:
+        - Auth
+        - Crud
+      responses:
+        '200':
+          description: Data from the created user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserData'
+        '400':
+          description: Missing/Incorrect data from body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IncorrectData'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginError'
+  /auth/token:
+    post:
+      operationId: auth_token
+      summary: Create auth token
+      description: Creates a auth token to authenticate api integration
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: Token information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginError'
+  /auth/list:
+    get:
+      operationId: auth_list
+      summary: Lists users auth tokens
+      description: Retrieves a list of auth tokens created by the user
+      tags:
+        - Auth
+      responses:
+        '200':
+          description: A list of auth tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthTokenList'
