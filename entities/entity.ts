@@ -29,6 +29,11 @@ export const entitySchema: Schema<IEntity> = new Schema<IEntity>({
     agent: { type: Schema.Types.ObjectId, ref: 'Agent', index: true }
 }, { timestamps: { createdAt: true, updatedAt: true }, versionKey: false });
 
+
+entitySchema.post('updateOne', function(this: IEntity) {
+    console.log(this);
+})
+
 export default (con: Connection) => {
     return con.model<IEntity>('Entity', entitySchema);
 }

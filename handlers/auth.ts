@@ -19,14 +19,12 @@ export const login: APIGatewayProxyHandler = async (event, ctx) => {
     }
 
     const SessionToken: Model<ISessionToken> = connection.model('SessionToken');
-    let token = await SessionToken.findOne({ 'data.userId': usr._id });
+    await SessionToken.remove({ 'data.userId': usr._id.toString() })
 
-    if (!token) {
-        token = new SessionToken({
-            ttl: usr.tokenExpiration,
-            data: { userId: usr._id.toString() }
-        });
-    }
+    let token = new SessionToken({
+        ttl: usr.tokenExpiration,
+        data: { userId: usr._id.toString() }
+    });
 
     token.renew();
     await token.save();
@@ -104,7 +102,7 @@ export const authorizer: CustomAuthorizerHandler = async (event: CustomAuthorize
             const user = await User.findById(session.data.userId);
             if (user) {
                 id = user._id;
-                data = { session: session.data, mode: 'Authorization' }
+                data = { session: session.data, mode: 'Authorization', scopes: ['all'] }
             }
         }
     } else if (xToken) {
@@ -112,7 +110,7 @@ export const authorizer: CustomAuthorizerHandler = async (event: CustomAuthorize
         const auth = await AuthToken.findOne({ token: xToken });
         if (auth) {
             id = auth.user;
-            data = { mode: 'X-Token' };
+            data = { mode: 'X-Token', scopes: auth.scopes };
         }
     }
 

@@ -21,6 +21,7 @@ provider:
   region: us-east-1
   stackName: atmus-ras-stack
   apiName: node-atmus-ras-api
+  memorySize: 512
   deploymentBucket:
     name: ${self:provider.apiName}
   iamRoleStatements:

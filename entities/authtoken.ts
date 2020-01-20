@@ -1,6 +1,7 @@
 import { Document, Schema, Connection } from "mongoose";
 import { WithDate } from "./common";
 import * as crypto from 'crypto';
+import { accessScopePlugin } from "../lib/security";
 
 const SALT = process.env.SALT;
 
@@ -27,6 +28,8 @@ authTokenSchema.methods.toJSON = function () {
     // delete obj.token;
     return obj;
 }
+
+authTokenSchema.plugin(accessScopePlugin, { baseScope: 'auth-token' });
 
 export default (con: Connection) => {
     return con.model<IAuthToken>('AuthToken', authTokenSchema);

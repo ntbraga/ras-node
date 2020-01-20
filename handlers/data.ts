@@ -4,14 +4,26 @@ import { createConnection } from '../db';
 import { parseQueryParams } from '../lib/paramparser';
 import { IUser } from '../entities/user';
 import { Model, Types } from 'mongoose';
+import { validateScopes } from '../lib/security';
 
 export const query: APIGatewayProxyHandler = async (event, ctx) => {
-    const entity = event.pathParameters.entity;
     const connection = await createConnection(ctx);
+    const entity = event.pathParameters.entity;
+    const m: Model<any> = connection.model(entity);
+    const validated = validateScopes(event, ['data/read', ((<any>m).scopes || {}).read].filter(Boolean));
 
-    const query = parseQueryParams(event.queryStringParameters);
+    if(validated !== true) {
+        return validated;
+    }    
+    const auth = event.requestContext.authorizer;
+    const ignore = event.headers['X-Ignore-User'];
+    const userQuery: any = {}
 
-    const m = connection.model(entity);
+    if(ignore !== 'true') {
+        userQuery.user = auth.principalId;
+    }
+
+    const query = parseQueryParams({ ...userQuery, ...(event.queryStringParameters || {}) }, m.schema);
     let data = await m.find(query);
 
     return {
@@ -60,7 +72,7 @@ export const createUser: APIGatewayProxyHandler = async (event, ctx) => {
             statusCode: 200,
             body: JSON.stringify(data, null, 2),
         };
-    } catch(err) {
+    } catch (err) {
         return {
             statusCode: 400,
             body: JSON.stringify({ message: 'E-mail already exists', key: 'email', cause: 'duplicated' })

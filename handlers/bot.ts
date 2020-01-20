@@ -4,6 +4,7 @@ import { createConnection } from '../db';
 import { LambdaHandler, LambdaFunctions } from '../lib/invoke';
 import { Model } from 'mongoose';
 import { IUser } from '../entities/user';
+import { IAgent } from '../entities/agent';
 
 export const train: APIGatewayProxyHandler = async (event, ctx) => {
     const connection = await createConnection(ctx);
@@ -13,6 +14,9 @@ export const train: APIGatewayProxyHandler = async (event, ctx) => {
     const User: Model<IUser> = connection.model('User');
 
     const usr = await User.findById(auth.principalId);
+
+    const Agent: Model<IAgent> = connection.model('Agent');
+    
 
     const request = {
         id_account: usr._id.toString(),

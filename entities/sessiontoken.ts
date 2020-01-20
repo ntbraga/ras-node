@@ -26,7 +26,7 @@ sessionTokenSchema.methods.validateToken = function () {
 }
 
 sessionTokenSchema.methods.renew = function () {
-    this.expiresAt = moment().add('milliseconds', this.ttl).toDate();
+    this.expiresAt = moment().add(this.ttl, 'milliseconds').toDate();
     return this.expiresAt;
 }
 
